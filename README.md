@@ -14,7 +14,7 @@
 			----DmelRef.fasta.tgz<br/>
 			----pipeline_software.tgz<br/>	
 	----outputs<br/>
-<pre>
+</pre>
 
  Steps 2-4 are implemented in split_n_run.sh.<br/>
  2. Run split.pl (on the submit machine) for each sample to split into blocks. 
