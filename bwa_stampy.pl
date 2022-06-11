@@ -64,12 +64,9 @@ print S "samtools view -bS $read_set[0]_remapped.$block_id.sam > $read_set[0]_re
 print S "echo flagstat $read_set[0]_remapped.$block_id.bam\n";
 print S "samtools flagstat $read_set[0]_remapped.$block_id.bam\n";
 
-# Add checkpoint to check that all reads were mapped
-#print S "n_reads=`samtools flagstat $read_set[0]_remapped.$block_id.bam | awk '{print $1}' | head -n 1`\n";
-
 
 # Added sort step to speed up combining 
-print S "samtools view -h -q 20 $read_set[0]_remapped.$block_id.bam | samtools sort -  -o $read_set[0]_remapped.sort.$block_id.bam\n";
+print S "samtools sort $read_set[0]_remapped.$block_id.bam -o $read_set[0]_remapped.sort.$block_id.bam\n";
 print S "mv $read_set[0]_remapped.sort.$block_id.bam ../$read_set[0]_remapped.$block_id.bam \n";
 print S "cd ../\n";
 print S "rm -rf ./pipeline_run\n";
