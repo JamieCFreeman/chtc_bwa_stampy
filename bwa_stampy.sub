@@ -8,7 +8,7 @@ transfer_input_files = /home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_s
 when_to_transfer_output = ON_EXIT_OR_EVICT
 +WantFlocking = true
 +WantGlideIn = true
-requirements = (OpSys == "LINUX")
+requirements = (OpSys == "LINUX") && (Name != "patel0000.chtc.wisc.edu")
 request_cpus = 1
 request_disk = 2000000
 stream_output = false

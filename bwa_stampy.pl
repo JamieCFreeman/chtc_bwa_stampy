@@ -32,7 +32,12 @@ $shell="shell.sh";
 open S, ">$shell";
 print S '#!/bin/bash';
 print S "\n";
-print S "uname -r\n";
+
+# Print node OS information for debugging
+print S "echo Node is running\n";
+print S "uname -a\n";
+print S "cat /etc/os-release\n";
+
 print S "mkdir pipeline_run\n";
 print S "mv $ref_string.fasta.tgz ./pipeline_run\n";
 print S "mv pipeline_software.tgz ./pipeline_run\n";
