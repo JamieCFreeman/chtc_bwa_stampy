@@ -11,7 +11,7 @@ N_OUT=$( find ./outputs/ -name "*.log" -name "*Block*" -name "*${FOLDER}*" | wc 
 if [ ${N_BAMS} -eq ${N_OUT} ]; then
   echo "All expected output bams exist ";
 else
-  echo >&2 "There should be ${N_OUT} bams, but there are ${N_BAMS}. Check output before proceeding"; exit 1; 
+  echo >&2 "For ${FOLDER} there should be ${N_OUT} bams, but there are ${N_BAMS}. Check output before proceeding"; exit 1; 
 fi
 
 # Stampy error ends up with a bam files that has header and nothing else, so just b/c bam is there 
