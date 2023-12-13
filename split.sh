@@ -1,11 +1,29 @@
-# File names are like 25Feb23-1-ZI254N_S393_L002_R2_001_Block00251.fastq 
+#!/bin/bash
+
+##################################################################################################
+
+# Update 2023 JCF
+
+# For runs on CHTC, split fastq file into blocks that can be mapped individually as 
+#	separate jobs. This is my implementation of Jeremy's? legacy perl script
+#	split.pl. Edited in order to gzip output files on stream to save space.
+
+
+###################################################################################################
+
+# Input
 
 FOLDER="/home/jcfreeman2/chtc_align/input_fastq/25Feb23-1-ZI254N"
 FILE="25Feb23-1-ZI254N_S393_L002_R2_001.fastq.gz"
-
-
-SHORT=` echo ${FOLDER}/${FILE} | sed 's/.fastq.gz/_Block/' `
 N_LINES="500000"
+
+
+####################################################################################################
+
+
+# Get file prefix for output block names
+SHORT=` echo ${FOLDER}/${FILE} | sed 's/.fastq.gz/_Block/' `
+# File names are like 25Feb23-1-ZI254N_S393_L002_R2_001_Block00251.fastq 
 
 # Split file (and gzip output files)
 zcat ${FOLDER}/${FILE} | 
