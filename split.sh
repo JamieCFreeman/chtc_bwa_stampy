@@ -24,22 +24,25 @@ N_LINES="750000"
 # Define a function to split fq, check output, and clean up.
 
 function split_fq_gz {
+  #From folder & readset get file name
+  FILE=`find ${FOLDER} -type f -iname "*${READ_SET}*" ! -iname "*Block*" |  sed 's /.*/  ' `
   echo "Running split for ${FILE}"
   # Get file prefix for output block names
   SHORT=` echo ${FOLDER}/${FILE} | sed 's/.fastq.gz/_Block/' `
   # File names are like 25Feb23-1-ZI254N_S393_L002_R2_001_Block00251.fastq 
 
   # Split file (and gzip output files)
-  zcat ${FOLDER}/${FILE} | 
-    split -a 5 --additional-suffix=".fastq" -d -l ${N_LINES}  --filter='gzip > $FILE.gz' - ${SHORT}
+ # zcat ${FOLDER}/${FILE} | 
+ #   split -a 5 --additional-suffix=".fastq" -d -l ${N_LINES}  --filter='gzip > $FILE.gz' - ${SHORT}
 
   # How many reads should there be in the combined file?
   # 1. Every block except the last should have N_LINES /4 reads
-  n_files=`find ${FOLDER} -maxdepth 1 -mindepth 1 -type f -iname "*Block*" | wc -l`
+  n_files=`find ${FOLDER} -maxdepth 1 -mindepth 1 -type f -iname "*Block*" -iname "*${READ_SET}*" | wc -l`
   reads_per_split=$(echo $(( ${N_LINES} / 4 )) )
   echo "There are $n_files block files."
   # 2. Need to count lines from the last file to get it's read number
-  last_file=$(zcat $(find ${FOLDER} -maxdepth 1 -mindepth 1 -type f  -iname "*Block*" | sort -V | tail -n 1) | wc -l)
+  last_file=$(zcat $(find ${FOLDER} -maxdepth 1 -mindepth 1 -type f -iname "*Block*" -iname "*${READ_SET}*" | 
+sort -V | tail -n 1) | wc -l)
   # 3. Total reads output is equal to (the n of block files) * (reads per block) + ((lines of last file) /4 )
   total_reads_output=$( echo $(( ((${n_files} - 1) * ${reads_per_split}) + (last_file / 4) )) )
   echo "${total_reads_output} reads are in the block files"
@@ -63,10 +66,10 @@ function split_fq_gz {
 ###########################################################################################
 
 # Run for both R1 & R2 files
-#FILE=`find ${FOLDER} -type f -iname "*R1*" |  sed 's /.*/  ' `
-#split_fq_gz()
+READ_SET="R1"
+split_fq_gz
 
-FILE=`find ${FOLDER} -type f -iname "*R2*" |  sed 's /.*/  ' `
+READ_SET="R2"
 split_fq_gz
 
 
