@@ -36,7 +36,7 @@ OUTPUT_DIR=$2
 #	and take non successes forward into file
 find ${OUTPUT_DIR} -maxdepth 1 -name "*.err" | \
 	xargs grep -c "stampy: Done" | \
-	grep ".err:0" | sed "s/.err.*.//" | sed 's/^.*_stampy_//' \
+	grep -v ".err:3" | sed "s/.err.*.//" | sed 's/^.*_stampy_//' \
 	> ${PREFIX}_failed_jobs.txt
 
 # For the failed jobs, just find the lines for them in the original dag, and make 
