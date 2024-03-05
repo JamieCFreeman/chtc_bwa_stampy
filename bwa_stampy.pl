@@ -40,10 +40,13 @@ print S "cat /etc/os-release\n";
 
 print S "mkdir pipeline_run\n";
 print S "mv $ref_string.fasta.tgz ./pipeline_run\n";
+# Testing new samtools
+#print S "mv pipeline_software2.tgz pipeline_software.tgz\n";
 print S "mv pipeline_software.tgz ./pipeline_run\n";
 print S "mv *Block* ./pipeline_run\n";
 print S "cd ./pipeline_run\n";
-print S "tar -xzf $ref_string.fasta.tgz\n";
+print S "echo $ref_string.fasta.tgz\n";
+print S "tar -xzf $ref_string.fasta.tgz -O > $ref_string.fasta \n";
 print S "tar -xzf pipeline_software.tgz\n";
 print S "gzip -d $tarred_fastq[0]\n";
 print S "gzip -d $tarred_fastq[1]\n";
