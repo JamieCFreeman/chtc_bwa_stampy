@@ -16,7 +16,7 @@
 
 
 
-dir = "/home/jcfreeman2/chtc_align/input_fastq/27Feb23-12-FR260N"
+dir = "/home/jcfreeman2/chtc_align/input_fastq/27Feb23-15-FR360N"
 
 #dir = "/raid10/jamie/FR_N_genomes/27Feb23-16-ZI250N"
 
@@ -39,11 +39,17 @@ except ImportError as e:
 #########################################################################
 
 sub = "bwa_stampy.sub"
-ref = "27Feb23-12-FR260N_ref.fasta.tgz"
-out = "bwa_stampy.dag"
-sa_code  = "A"
+ref = "27Feb23-15-FR326N_ref.fasta.tgz"
+out = "bwa_stampy_15.dag"
+sa_code  = "C"
 
 
+def get_sample_name(dir):
+    '''
+    From directory get sample name 
+    '''
+    spl = dir.split("/")
+    return( spl[len(spl)-1] )
 
 
 def mapping_jobs_from_folder(sub_file, ref_file, folder, out_file, sample_code):
@@ -61,19 +67,26 @@ def mapping_jobs_from_folder(sub_file, ref_file, folder, out_file, sample_code):
 	R1_list = list( compress(files, R1_bool) )
 	R2_list = list( compress(files, R2_bool) )
 #	
-	# Open file for writing and 
+	# Get sample_dir name
+	sample_dir = get_sample_name(folder)
+
+# Open file for writing and 
 	with open(out_file, 'w') as f:
 		for i in range(len(R1_list)):
-			f.write( "JOB " + sample_code + str(i) + " " + sub_file + '\n' )
-			f.write( "VARS " + sample_code + str(i) + " ref=" + '"' + ref_file + '"' + '\n' )
-			f.write( "VARS " + sample_code +  str(i) +" fastq1=" + '"' + R1_list[i] + '"' + '\n' )
-			f.write( "VARS " + sample_code +  str(i) +" fastq2=" + '"' + R2_list[i] + '"' + '\n' )
+			node_id = sample_code + str(i)
+			f.write( "JOB " + node_id + " " + sub_file + '\n' )
+			f.write( "VARS " + node_id  + " ref=" + '"' + ref_file + '"' + '\n' )
+			f.write( "VARS " + node_id + " fastq1=" + '"' + sample_dir + "/" + R1_list[i] + '"' + '\n' )
+			f.write( "VARS " + node_id + " fastq2=" + '"' + sample_dir + "/" + R2_list[i] + '"' + '\n' )
 			s = R1_list[i]
 			b_id = s[0:(len(s)-9)]
-			f.write( "VARS " + sample_code + str(i) + " block_id=" + '"' + b_id + '"' + '\n' )
-
-
-
+			f.write( "VARS " + node_id + " block_id=" + '"' + b_id + '"' + '\n' )
+	    # Write merge jobs
+		job_list = [ sa_code + str(i) for i in range(len(R1_list)) ]
+		job_str = ' '.join(job_list)
+		f.write("JOB " + sa_code + " hello_chtc.sub" + '\n')
+		f.write("PARENT " + job_str +  " CHILD " + sa_code + '\n')
+		f.write("SCRIPT POST " + sa_code + " cleanup.sh " + '"' + sample_dir + '"' + '\n')
 
 
 mapping_jobs_from_folder(sub, ref, dir, out, sa_code)
