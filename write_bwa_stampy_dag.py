@@ -39,18 +39,26 @@ except ImportError as e:
 #########################################################################
 
 sub = "bwa_stampy.sub"
-ref = "27Feb23-15-FR326N_ref.fasta.tgz"
+#ref = "27Feb23-15-FR326N_ref.fasta.tgz"
 out = "bwa_stampy_15.dag"
 sa_code  = "C"
+round = 2
 
-
-def get_sample_name(dir):
+def get_sample_name(folder):
     '''
     From directory get sample name 
     '''
     spl = dir.split("/")
     return( spl[len(spl)-1] )
 
+def get_ref(folder, round):
+    '''
+    If no ref is provided, give default based on my naming conventions
+    '''
+    if round == 1:
+        return("DmelRef.fasta.tgz")
+    elif round == 2:
+        return( get_sample_name(folder) + "_ref.fasta.tgz" )
 
 def mapping_jobs_from_folder(sub_file, ref_file, folder, out_file, sample_code):
 	'''
@@ -89,5 +97,5 @@ def mapping_jobs_from_folder(sub_file, ref_file, folder, out_file, sample_code):
 		f.write("SCRIPT POST " + sa_code + " cleanup.sh " + '"' + sample_dir + '"' + '\n')
 
 
-mapping_jobs_from_folder(sub, ref, dir, out, sa_code)
+mapping_jobs_from_folder(sub, get_ref(dir, round), dir, out, sa_code)
 
