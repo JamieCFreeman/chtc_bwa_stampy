@@ -96,6 +96,45 @@ def mapping_jobs_from_folder(sub_file, ref_file, folder, out_file, sample_code):
 		f.write("PARENT " + job_str +  " CHILD " + sa_code + '\n')
 		f.write("SCRIPT POST " + sa_code + " cleanup.sh " + '"' + sample_dir + '"' + '\n')
 
+def merge_jobs_from_folder(merge_max, sub_file, folder, sample_code):
+	# Get block files from dir
+	files = sorted( os.listdir(dir) )
+	
+	# Directory contains R1 and R2 files- get lists of both
+	R1_bool = [ "_R1_" in f for f in files ]
+	R1_list = list( compress(files, R1_bool) )
+	
+	# Get sample_dir name
+	sample_dir = get_sample_name(folder)
+	
+	# Set max number of files to merge
+	merge_max = 30
+	
+	# Get job list for all mapping jobs
+	job_list = [ sa_code + str(i) for i in range(len(R1_list)) ]
+	
+	# Split mapping jobs into lists of max lenth merge_max
+	merge_lists = [job_list[x:x+merge_max] for x in range(0, len(job_list), merge_max)]
+	merge_str = [' '.join(merge_lists[i]) for i in range( len(merge_lists) ) ]
+	
+	# Get bams for each merge job 
+	bams = [R1_list[i].split("R1")[0] + "remapped." + R1_list[i].split("_")[5].split(".")[0] + ".bam"  for i in range(0,len(R1_list))]
+	bam_lists = [bams[x:x+merge_max] for x in range(0, len(bams), merge_max)]
+	
+	# Write temporary files with merge lists
+	for i in range(len(bam_lists)):
+		temp_merge = "merge_list" + sa_code + str(i)
+		with open(temp_merge, 'w') as f:
+			f.write('\n'.join(bam_lists[i]))
+		with open("test.dag", 'a') as f:
+			job_now =  sa_code + "_merge" + str(i)
+			f.write( "JOB " + job_now + " " + sub_file + '\n' )
+			f.write( "SCRIPT PRE " + job_now + " gather_merge.sh " + temp_merge + '\n' )
+			f.write( "SCRIPT POST " + job_now + " merge_POST.sh " + temp_merge + '\n' )
+			f.write( "VARS " + job_now + " file_list=" + '"' + temp_merge + '"' + '\n' )
 
-mapping_jobs_from_folder(sub, get_ref(dir, round), dir, out, sa_code)
+
+#mapping_jobs_from_folder(sub, get_ref(dir, round), dir, out, sa_code)
+
+merge_jobs_from_folder(30,  "merge.sub", dir, sa_code)
 
