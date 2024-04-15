@@ -1,5 +1,4 @@
 universe = container
-#universe = vanilla
 initialdir = /home/jcfreeman2/chtc_align/outputs
 executable = /home/jcfreeman2/chtc_align/bwa_stampy.pl
 
@@ -16,7 +15,10 @@ when_to_transfer_output = ON_EXIT_OR_EVICT
 
 # IMPORTANT! Require execute servers that can access /staging
 Requirements = (Target.HasCHTCStaging == true)
-container_image = osdf:///chtc/staging/jcfreeman2/osgvo-el7.sif
+# OSDF file transfer protocol allows for use from non-chtc nodes, but currently not working,
+# transfering from staging temporarily
+#container_image = osdf:///chtc/staging/jcfreeman2/osgvo-el7.sif
+container_image = file:///staging/jcfreeman2/osgvo-el7.sif
 
 request_cpus = 1
 #request_disk = 10000000 Jeremy had- but I seem to be using 20% of this with current block size
