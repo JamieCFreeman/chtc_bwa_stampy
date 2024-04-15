@@ -60,6 +60,28 @@ def get_ref(folder, round):
     elif round == 2:
         return( get_sample_name(folder) + "_ref.fasta.tgz" )
 
+def write_inline_submit(sub_file, name, exc, in_dir, trans_in, cpu, ram, disk, trans_exc="true", uni="container", cont_im="file:///staging/jcfreeman2/osgvo-el7.sif"):
+	'''
+	Write inline submit description for dag
+    '''
+	with open(sub_file, 'w') as f:
+		f.write( "SUBMIT-DESCRIPTION " + name + " {" + '\n' )
+		f.write( '\t' + f"{'executable' :<25} = {exc}" + '\n')
+		f.write( '\t' + f"{'initialdir' :<25} = {in_dir}" + '\n')
+		f.write( '\t' + f"{'transfer_executable' :<25} = {trans_exc}" +'\n')
+		f.write( '\t' + f"{'transfer_input_files' :<25} = {trans_in}" +'\n')
+		f.write( '\t' + f"{'when_to_transfer_output' :<25} = ON_EXIT_OR_EVICT" +'\n')
+		f.write( '\t' + f"{'arguments' :<25} = {file_list}" +'\n')
+		f.write( '\t' + f"{'universe' :<25} = {uni}" +'\n')
+		f.write( '\t' + f"{'container_image' :<25} = {cont_im}" +'\n')
+		f.write( '\t' + f"{'request_cpus' :<25} = {cpu}" +'\n')
+		f.write( '\t' + f"{'request_memory' :<25} = {ram}" +'\n')
+		f.write( '\t' + f"{'request_disk' :<25} = {disk}" +'\n')
+		f.write( '\t' + f"{'stream_output' :<25} = false" +'\n')
+		f.write( "}" + '\n' )
+
+#write_inline_submit("test.txt", name="SampleMerge", exc="/home/jcfreeman2/chtc_align/merge_job.sh", in_dir="/home/jcfreeman2/chtc_align", trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz", cpu="1", ram="1296", disk="25000000" )
+
 def mapping_jobs_from_folder(sub_file, ref_file, folder, out_file, sample_code):
 	'''
 	Write to file sub_file mapping jobs for block fastq files present in
@@ -151,5 +173,5 @@ out = "bwa_stampy_" + get_sample_name(dir) + ".dag"
 
 mapping_jobs_from_folder(sub, get_ref(dir, round), dir, out, sa_code)
 
-merge_jobs_from_folder(30,  "merge.sub", dir, "merge_temp.dag", sa_code)
+merge_jobs_from_folder(30,  "merge.sub", dir, out, sa_code)
 

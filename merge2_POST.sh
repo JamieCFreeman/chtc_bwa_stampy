@@ -26,12 +26,12 @@ RESULT=` python -c "print( ${FINAL_BAM} == ${INPUT_READS} )" `
 if [ "${RESULT}" == "True" ]; then
 	echo "removing";
 	find /staging/jcfreeman2 -iname "merge_list${INPUT}*.bam" -exec rm {} \;
+	find /staging/jcfreeman2 -iname "${INPUT}*.tar.gz" -exec rm {} \;
 	find ./outputs -name "*remapped.Block*" -name "*.bam" -name "${INPUT}*" -exec rm {} \;
 	find ./outputs -name "*${INPUT}*" \( -name "*.err" -o -name "*.log"  -o -name "*.out" \) -exec \
 		    tar -czf ./outputs/${INPUT}_chtc_logs.tar.gz {} \;
-	#rm /staging/jcfreeman2/merge_list${INPUT}*.tar.gz
-	#rm merge_list${INPUT}*
 	find . -iname "merge_list${INPUT}*" -exec rm {} \;
+	find . -iname "${INPUT}.log" -exec rm {} \;
 else
 	echo "Final bam for ${INPUT} has ${FINAL_BAM} reads, but block fastq files total ${INPUT_READS}"
 fi
