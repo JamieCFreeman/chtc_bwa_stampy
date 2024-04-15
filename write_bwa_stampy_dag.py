@@ -16,7 +16,7 @@
 
 
 
-dir = "/home/jcfreeman2/chtc_align/input_fastq/27Feb23-15-FR360N"
+dir = "/home/jcfreeman2/chtc_align/input_fastq/27Feb23-16-ZI250N"
 
 #dir = "/raid10/jamie/FR_N_genomes/27Feb23-16-ZI250N"
 
@@ -39,9 +39,6 @@ except ImportError as e:
 #########################################################################
 
 sub = "bwa_stampy.sub"
-#ref = "27Feb23-15-FR326N_ref.fasta.tgz"
-out = "bwa_stampy_15.dag"
-sa_code  = "C"
 round = 2
 
 def get_sample_name(folder):
@@ -50,6 +47,9 @@ def get_sample_name(folder):
     '''
     spl = dir.split("/")
     return( spl[len(spl)-1] )
+
+sa_code  = get_sample_name(dir)
+out = "bwa_stampy_" + get_sample_name(dir) + ".dag"
 
 def get_ref(folder, round):
     '''
@@ -96,7 +96,7 @@ def mapping_jobs_from_folder(sub_file, ref_file, folder, out_file, sample_code):
 		f.write("PARENT " + job_str +  " CHILD " + sa_code + '\n')
 		f.write("SCRIPT POST " + sa_code + " cleanup.sh " + '"' + sample_dir + '"' + '\n')
 
-def merge_jobs_from_folder(merge_max, sub_file, folder, sample_code):
+def merge_jobs_from_folder(merge_max, sub_file, folder, out_dag, sample_code):
 	# Get block files from dir
 	files = sorted( os.listdir(dir) )
 	
@@ -118,7 +118,7 @@ def merge_jobs_from_folder(merge_max, sub_file, folder, sample_code):
 	merge_str = [' '.join(merge_lists[i]) for i in range( len(merge_lists) ) ]
 	
 	# Get bams for each merge job 
-	bams = [R1_list[i].split("R1")[0] + "remapped." + R1_list[i].split("_")[5].split(".")[0] + ".bam"  for i in range(0,len(R1_list))]
+	bams = ["outputs/" + R1_list[i].split("R1")[0] + "remapped." + R1_list[i].split("_")[5].split(".")[0] + ".bam"  for i in range(0,len(R1_list))]
 	bam_lists = [bams[x:x+merge_max] for x in range(0, len(bams), merge_max)]
 	
 	# Write temporary files with merge lists
@@ -126,15 +126,30 @@ def merge_jobs_from_folder(merge_max, sub_file, folder, sample_code):
 		temp_merge = "merge_list" + sa_code + str(i)
 		with open(temp_merge, 'w') as f:
 			f.write('\n'.join(bam_lists[i]))
-		with open("test.dag", 'a') as f:
+		with open(out_dag, 'a') as f:
 			job_now =  sa_code + "_merge" + str(i)
 			f.write( "JOB " + job_now + " " + sub_file + '\n' )
 			f.write( "SCRIPT PRE " + job_now + " gather_merge.sh " + temp_merge + '\n' )
 			f.write( "SCRIPT POST " + job_now + " merge_POST.sh " + temp_merge + '\n' )
 			f.write( "VARS " + job_now + " file_list=" + '"' + temp_merge + '"' + '\n' )
+			f.write( "VARS " + job_now + " strip=" + '"' + "1" + '"' + '\n' )
+			f.write( "PARENT " + merge_str[i] + " CHILD " + job_now + '\n' )
+    # Write sample-level merge job
+	with open(out_dag, 'a') as f:
+		f.write( "JOB " + sa_code + " SampleMerge" + '\n')
+		f.write( "SCRIPT PRE " + sa_code + " merge2_PRE.sh " + sa_code + '\n')
+		f.write( "SCRIPT POST " + sa_code + " merge2_POST.sh " + sa_code + '\n' )
+		f.write( "VARS " + sa_code + " file_list=" + '"' + sa_code + '"' + '\n' )
+		f.write( "VARS " + sa_code + " strip=" + '"' + "2" + '"' + '\n' )
+		job_list = [sa_code + "_merge" + str(i) for i in range(len(bam_lists))]
+		job_str = ' '.join(job_list)
+		f.write( "PARENT " + job_str + " CHILD " + sa_code + '\n')
 
 
-#mapping_jobs_from_folder(sub, get_ref(dir, round), dir, out, sa_code)
+sa_code  = get_sample_name(dir)
+out = "bwa_stampy_" + get_sample_name(dir) + ".dag"
 
-merge_jobs_from_folder(30,  "merge.sub", dir, sa_code)
+mapping_jobs_from_folder(sub, get_ref(dir, round), dir, out, sa_code)
+
+merge_jobs_from_folder(30,  "merge.sub", dir, "merge_temp.dag", sa_code)
 
