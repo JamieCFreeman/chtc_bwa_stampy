@@ -22,6 +22,7 @@
 
 
 # Untar files
+find ./input_fastq -maxdepth 1 -iname "*.tar.gz" | xargs -I % tar -xf % -C ./input_fastq
 # find ./input_fastq -maxdepth 1 -iname "*.tar.gz" -exec rm {} \;
 
 
