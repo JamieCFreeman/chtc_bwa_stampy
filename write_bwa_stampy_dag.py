@@ -60,7 +60,7 @@ def get_ref(folder, round):
     elif round == 2:
         return( get_sample_name(folder) + "_ref.fasta.tgz" )
 
-def write_inline_submit(sub_file, name, exc, in_dir, trans_in, cpu, ram, disk, trans_exc="true", uni="container", cont_im="file:///staging/jcfreeman2/osgvo-el7.sif"):
+def write_inline_submit(sub_file, name, exc, in_dir, trans_in, args, out_pattern, cpu, ram, disk, trans_exc="true", uni="container", cont_im="file:///staging/jcfreeman2/osgvo-el7.sif"):
 	'''
 	Write inline submit description for dag
     '''
@@ -71,8 +71,12 @@ def write_inline_submit(sub_file, name, exc, in_dir, trans_in, cpu, ram, disk, t
 		f.write( '\t' + f"{'transfer_executable' :<25} = {trans_exc}" +'\n')
 		f.write( '\t' + f"{'transfer_input_files' :<25} = {trans_in}" +'\n')
 		f.write( '\t' + f"{'when_to_transfer_output' :<25} = ON_EXIT_OR_EVICT" +'\n')
-		f.write( '\t' + f"{'arguments' :<25} = {file_list}" +'\n')
+		f.write( '\t' + f"{'arguments' :<25} = {args}" + '\n')
+		f.write( '\t' + f"{'output' :<25} = {out_pattern}.out" +'\n')
+		f.write( '\t' + f"{'error' :<25} = {out_pattern}.err" +'\n')
+		f.write( '\t' + f"{'log' :<25} = {out_pattern}.log" +'\n')
 		f.write( '\t' + f"{'universe' :<25} = {uni}" +'\n')
+		f.write( '\t' + f"{'Requirements' :<25} = (Target.HasCHTCStaging == true)" +'\n')
 		f.write( '\t' + f"{'container_image' :<25} = {cont_im}" +'\n')
 		f.write( '\t' + f"{'request_cpus' :<25} = {cpu}" +'\n')
 		f.write( '\t' + f"{'request_memory' :<25} = {ram}" +'\n')
@@ -80,7 +84,9 @@ def write_inline_submit(sub_file, name, exc, in_dir, trans_in, cpu, ram, disk, t
 		f.write( '\t' + f"{'stream_output' :<25} = false" +'\n')
 		f.write( "}" + '\n' )
 
-#write_inline_submit("test.txt", name="SampleMerge", exc="/home/jcfreeman2/chtc_align/merge_job.sh", in_dir="/home/jcfreeman2/chtc_align", trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz", cpu="1", ram="1296", disk="25000000" )
+write_inline_submit("test.txt", name="SampleMerge", exc="/home/jcfreeman2/chtc_align/merge_job.sh", in_dir="/home/jcfreeman2/chtc_align", trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz", args="", out_pattern="$(file_list)", cpu="1", ram="1296", disk="25000000" )
+
+write_inline_submit("test2.txt", name="MapBlocks", exc="/home/jcfreeman2/chtc_align/bwa_stampy.pl", in_dir="/home/jcfreeman2/chtc_align/outputs", trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz,/home/jcfreeman2/chtc_align/input_fastq/shared/$(ref),/home/jcfreeman2/chtc_align/input_fastq/$(fastq1),/home/jcfreeman2/chtc_align/input_fastq/$(fastq2)", args="$(file_list) $(strip)", out_pattern="bwa_stampy_$(block_id)", cpu="1", ram="1000", disk="8000000")
 
 def mapping_jobs_from_folder(sub_file, ref_file, folder, out_file, sample_code):
 	'''
@@ -112,11 +118,11 @@ def mapping_jobs_from_folder(sub_file, ref_file, folder, out_file, sample_code):
 			b_id = s[0:(len(s)-9)]
 			f.write( "VARS " + node_id + " block_id=" + '"' + b_id + '"' + '\n' )
 	    # Write merge jobs
-		job_list = [ sa_code + str(i) for i in range(len(R1_list)) ]
-		job_str = ' '.join(job_list)
-		f.write("JOB " + sa_code + " hello_chtc.sub" + '\n')
-		f.write("PARENT " + job_str +  " CHILD " + sa_code + '\n')
-		f.write("SCRIPT POST " + sa_code + " cleanup.sh " + '"' + sample_dir + '"' + '\n')
+		#job_list = [ sa_code + str(i) for i in range(len(R1_list)) ]
+		#job_str = ' '.join(job_list)
+		#f.write("JOB " + sa_code + " hello_chtc.sub" + '\n')
+		#f.write("PARENT " + job_str +  " CHILD " + sa_code + '\n')
+		#f.write("SCRIPT POST " + sa_code + " cleanup.sh " + '"' + sample_dir + '"' + '\n')
 
 def merge_jobs_from_folder(merge_max, sub_file, folder, out_dag, sample_code):
 	# Get block files from dir
@@ -171,7 +177,7 @@ def merge_jobs_from_folder(merge_max, sub_file, folder, out_dag, sample_code):
 sa_code  = get_sample_name(dir)
 out = "bwa_stampy_" + get_sample_name(dir) + ".dag"
 
-mapping_jobs_from_folder(sub, get_ref(dir, round), dir, out, sa_code)
+#mapping_jobs_from_folder(sub, get_ref(dir, round), dir, out, sa_code)
 
-merge_jobs_from_folder(30,  "merge.sub", dir, out, sa_code)
+#merge_jobs_from_folder(30,  "merge.sub", dir, out, sa_code)
 
