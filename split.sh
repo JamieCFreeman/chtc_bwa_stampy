@@ -25,7 +25,7 @@ N_LINES="750000"
 
 function split_fq_gz {
   #From folder & readset get file name
-  FILE=`find ${FOLDER} -type f -iname "*_${READ_SET}_*" ! -iname "*Block*" |  sed 's /.*/  ' `
+  FILE=`find ${FOLDER} -type f -iname "*_${READ_SET}_*" ! -iname "*Block*" |  sed 's .*/  ' `
   echo "Running split for ${FILE}"
   # Get file prefix for output block names
   SHORT=` echo ${FOLDER}/${FILE} | sed 's/.fastq.gz/_Block/' `
