@@ -29,7 +29,7 @@ if [ "${RESULT}" == "True" ]; then
 	find /staging/jcfreeman2 -iname "${INPUT}*.tar.gz" -exec rm {} \;
 	find ./outputs -name "*remapped.Block*" -name "*.bam" -name "${INPUT}*" -exec rm {} \;
 	find ./outputs -name "*${INPUT}*" \( -name "*.err" -o -name "*.log"  -o -name "*.out" \) -exec \
-		    tar -czf ./outputs/${INPUT}_chtc_logs.tar.gz {} \;
+		    tar -czf --remove-files ./outputs/${INPUT}_chtc_logs.tar.gz {} \;
 	find . -iname "merge_list${INPUT}*" -exec rm {} \;
 	find . -iname "${INPUT}.log" -exec rm {} \;
 else
