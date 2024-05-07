@@ -15,7 +15,6 @@
 #########################################################################
 
 
-#dir = sys.argv[1]
 
 #dir = "/home/jcfreeman2/chtc_align/input_fastq/21Oct22-7-ZI193N"
 #dir = "/home/jcfreeman2/chtc_align/input_fastq/ZI418N_SRA"
@@ -39,22 +38,19 @@ try:
 except ImportError as e:
     print("Error -> ", e)
 
+try:
+	import datetime
+except ImportError as e:
+    print("Error -> ", e)
+
 #########################################################################
-
-dir = sys.argv[1]
-
-sub = "bwa_stampy.sub"
-round = 2
 
 def get_sample_name(folder):
     '''
     From directory get sample name 
     '''
-    spl = dir.split("/")
+    spl = folder.split("/")
     return( spl[len(spl)-1] )
-
-sa_code  = get_sample_name(dir)
-out = "bwa_stampy_" + get_sample_name(dir) + ".dag"
 
 def get_ref(folder, round):
     '''
@@ -69,14 +65,15 @@ def write_inline_submit(sub_file, name, exc, in_dir, trans_in, args, out_pattern
 	'''
 	Write inline submit description for dag
     '''
-	with open(sub_file, 'w') as f:
+	with open(sub_file, 'a') as f:
 		f.write( "SUBMIT-DESCRIPTION " + name + " {" + '\n' )
 		f.write( '\t' + f"{'executable' :<25} = {exc}" + '\n')
 		f.write( '\t' + f"{'initialdir' :<25} = {in_dir}" + '\n')
 		f.write( '\t' + f"{'transfer_executable' :<25} = {trans_exc}" +'\n')
 		f.write( '\t' + f"{'transfer_input_files' :<25} = {trans_in}" +'\n')
 		f.write( '\t' + f"{'when_to_transfer_output' :<25} = ON_EXIT_OR_EVICT" +'\n')
-		f.write( '\t' + f"{'arguments' :<25} = {args}" + '\n')
+		if( len(args) > 0):
+			f.write( '\t' + f"{'arguments' :<25} = {args}" + '\n')
 		f.write( '\t' + f"{'output' :<25} = {out_pattern}.out" +'\n')
 		f.write( '\t' + f"{'error' :<25} = {out_pattern}.err" +'\n')
 		f.write( '\t' + f"{'log' :<25} = {out_pattern}.log" +'\n')
@@ -89,9 +86,6 @@ def write_inline_submit(sub_file, name, exc, in_dir, trans_in, args, out_pattern
 		f.write( '\t' + f"{'stream_output' :<25} = false" +'\n')
 		f.write( "}" + '\n' )
 
-#write_inline_submit("test.txt", name="SampleMerge", exc="/home/jcfreeman2/chtc_align/merge_job.sh", in_dir="/home/jcfreeman2/chtc_align", trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz", args="", out_pattern="$(file_list)", cpu="1", ram="1296", disk="25000000" )
-
-#write_inline_submit("test2.txt", name="MapBlocks", exc="/home/jcfreeman2/chtc_align/bwa_stampy.pl", in_dir="/home/jcfreeman2/chtc_align/outputs", trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz,/home/jcfreeman2/chtc_align/input_fastq/shared/$(ref),/home/jcfreeman2/chtc_align/input_fastq/$(fastq1),/home/jcfreeman2/chtc_align/input_fastq/$(fastq2)", args="$(file_list) $(strip)", out_pattern="bwa_stampy_$(block_id)", cpu="1", ram="1000", disk="8000000")
 
 def mapping_jobs_from_folder(sub_file, ref_file, folder, out_file, sample_code):
 	'''
@@ -99,7 +93,7 @@ def mapping_jobs_from_folder(sub_file, ref_file, folder, out_file, sample_code):
 	folder
 	'''
 	# Get block files from dir
-	files = sorted( os.listdir(dir) ) 
+	files = sorted( os.listdir(folder) ) 
 	
 	# Directory contains R1 and R2 files- get lists of both
 	R1_bool = [ "_R1_" in f for f in files ]
@@ -112,7 +106,7 @@ def mapping_jobs_from_folder(sub_file, ref_file, folder, out_file, sample_code):
 	sample_dir = get_sample_name(folder)
 
 # Open file for writing and 
-	with open(out_file, 'w') as f:
+	with open(out_file, 'a') as f:
 		for i in range(len(R1_list)):
 			node_id = sample_code + str(i)
 			f.write( "JOB " + node_id + " " + sub_file + '\n' )
@@ -136,7 +130,7 @@ def get_block_fq(fq):
 
 def merge_jobs_from_folder(merge_max, sub_file, folder, out_dag, sample_code):
 	# Get block files from dir
-	files = sorted( os.listdir(dir) )
+	files = sorted( os.listdir(folder) )
 	
 	# Directory contains R1 and R2 files- get lists of both
 	R1_bool = [ "_R1_" in f for f in files ]
@@ -183,11 +177,43 @@ def merge_jobs_from_folder(merge_max, sub_file, folder, out_dag, sample_code):
 		job_str = ' '.join(job_list)
 		f.write( "PARENT " + job_str + " CHILD " + sa_code + '\n')
 
+def subdirs(path):
+	"""Yield directory names not starting with '.' under given path."""
+	for entry in os.scandir(path):
+		if not entry.name.startswith('.') and entry.is_dir():
+			yield entry.name
 
-sa_code  = get_sample_name(dir)
-out = "bwa_stampy_" + get_sample_name(dir) + ".dag"
+#########################################################################
 
-mapping_jobs_from_folder(sub, get_ref(dir, round), dir, out, sa_code)
+if __name__ == "__main__":
 
-merge_jobs_from_folder(30,  "merge.sub", dir, out, sa_code)
+	fq_dir = sys.argv[1]
+	round = 1
+
+	# Title the out dag with current time
+	d   = datetime.datetime.now()
+	now = d.strftime("%Y-%m-%d_%H_%M")
+	out = "bwa_stampy_" + now + ".dag"
+	
+	# First write submit descriptions
+	write_inline_submit(out, name="MapBlocks", exc="/home/jcfreeman2/chtc_align/bwa_stampy.pl", in_dir="/home/jcfreeman2/chtc_align/outputs", trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz,/home/jcfreeman2/chtc_align/input_fastq/shared/$(ref),/home/jcfreeman2/chtc_align/input_fastq/$(fastq1),/home/jcfreeman2/chtc_align/input_fastq/$(fastq2)", args="", out_pattern="bwa_stampy_$(block_id)", cpu="1", ram="1000", disk="8000000")
+	
+	write_inline_submit(out, name="PrelimMerge", exc="/home/jcfreeman2/chtc_align/merge_job.sh", in_dir="/home/jcfreeman2/chtc_align", trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz", args="$(file_list) $(strip)", out_pattern="$(file_list)", cpu="1", ram="1296", disk="10000000" )
+	
+	write_inline_submit(out, name="SampleMerge", exc="/home/jcfreeman2/chtc_align/merge_job.sh", in_dir="/home/jcfreeman2/chtc_align", trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz", args="", out_pattern="$(file_list)", cpu="1", ram="1296", disk="25000000" )
+	
+	# If the input directory contains multiple directories, take those as samples, otherwise take input as a singular sample
+	subdir_list = [ x for x in subdirs(fq_dir) ]
+	find_shared = [ "shared" not in x for x in subdir_list ]
+	samples     = list( compress( subdir_list, find_shared) )
+	sample_list = [ os.path.join(fq_dir, x) for x in samples ] 
+	
+	if ( len(sample_list) < 1):
+		sample_list = [ fq_dir ]
+	
+	for i in sample_list:
+		# Then write jobs for each sample
+		sa_code  = get_sample_name(i)
+		mapping_jobs_from_folder("MapBlocks", get_ref(i, round), i, out, sa_code)
+		merge_jobs_from_folder(30,  "PrelimMerge", i, out, sa_code)
 
