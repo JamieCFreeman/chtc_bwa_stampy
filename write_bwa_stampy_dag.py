@@ -15,11 +15,10 @@
 #########################################################################
 
 
+#dir = sys.argv[1]
 
-dir = "/home/jcfreeman2/chtc_align/input_fastq/27Feb23-16-ZI250N"
-
-#dir = "/raid10/jamie/FR_N_genomes/27Feb23-16-ZI250N"
-
+#dir = "/home/jcfreeman2/chtc_align/input_fastq/21Oct22-7-ZI193N"
+#dir = "/home/jcfreeman2/chtc_align/input_fastq/ZI418N_SRA"
 
 ########################################################################
 
@@ -29,14 +28,20 @@ try:
 	import os
 except ImportError as e:
     print("Error -> ", e)
-
     
+try:
+	import sys
+except ImportError as e:
+    print("Error -> ", e)
+
 try:
 	from itertools import compress
 except ImportError as e:
     print("Error -> ", e)
 
 #########################################################################
+
+dir = sys.argv[1]
 
 sub = "bwa_stampy.sub"
 round = 2
@@ -84,9 +89,9 @@ def write_inline_submit(sub_file, name, exc, in_dir, trans_in, args, out_pattern
 		f.write( '\t' + f"{'stream_output' :<25} = false" +'\n')
 		f.write( "}" + '\n' )
 
-write_inline_submit("test.txt", name="SampleMerge", exc="/home/jcfreeman2/chtc_align/merge_job.sh", in_dir="/home/jcfreeman2/chtc_align", trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz", args="", out_pattern="$(file_list)", cpu="1", ram="1296", disk="25000000" )
+#write_inline_submit("test.txt", name="SampleMerge", exc="/home/jcfreeman2/chtc_align/merge_job.sh", in_dir="/home/jcfreeman2/chtc_align", trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz", args="", out_pattern="$(file_list)", cpu="1", ram="1296", disk="25000000" )
 
-write_inline_submit("test2.txt", name="MapBlocks", exc="/home/jcfreeman2/chtc_align/bwa_stampy.pl", in_dir="/home/jcfreeman2/chtc_align/outputs", trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz,/home/jcfreeman2/chtc_align/input_fastq/shared/$(ref),/home/jcfreeman2/chtc_align/input_fastq/$(fastq1),/home/jcfreeman2/chtc_align/input_fastq/$(fastq2)", args="$(file_list) $(strip)", out_pattern="bwa_stampy_$(block_id)", cpu="1", ram="1000", disk="8000000")
+#write_inline_submit("test2.txt", name="MapBlocks", exc="/home/jcfreeman2/chtc_align/bwa_stampy.pl", in_dir="/home/jcfreeman2/chtc_align/outputs", trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz,/home/jcfreeman2/chtc_align/input_fastq/shared/$(ref),/home/jcfreeman2/chtc_align/input_fastq/$(fastq1),/home/jcfreeman2/chtc_align/input_fastq/$(fastq2)", args="$(file_list) $(strip)", out_pattern="bwa_stampy_$(block_id)", cpu="1", ram="1000", disk="8000000")
 
 def mapping_jobs_from_folder(sub_file, ref_file, folder, out_file, sample_code):
 	'''
@@ -124,6 +129,11 @@ def mapping_jobs_from_folder(sub_file, ref_file, folder, out_file, sample_code):
 		#f.write("PARENT " + job_str +  " CHILD " + sa_code + '\n')
 		#f.write("SCRIPT POST " + sa_code + " cleanup.sh " + '"' + sample_dir + '"' + '\n')
 
+def get_block_fq(fq):
+	# From fastq file name get block id
+	spl1 = fq.split("_")
+	return spl1[len(spl1)-1].split(".")[0]
+
 def merge_jobs_from_folder(merge_max, sub_file, folder, out_dag, sample_code):
 	# Get block files from dir
 	files = sorted( os.listdir(dir) )
@@ -145,8 +155,8 @@ def merge_jobs_from_folder(merge_max, sub_file, folder, out_dag, sample_code):
 	merge_lists = [job_list[x:x+merge_max] for x in range(0, len(job_list), merge_max)]
 	merge_str = [' '.join(merge_lists[i]) for i in range( len(merge_lists) ) ]
 	
-	# Get bams for each merge job 
-	bams = ["outputs/" + R1_list[i].split("R1")[0] + "remapped." + R1_list[i].split("_")[5].split(".")[0] + ".bam"  for i in range(0,len(R1_list))]
+	# Get bams for each merge job
+	bams = ["outputs/" + R1_list[i].split("_R1_")[0] + "_remapped." + get_block_fq(R1_list[i]) + ".bam"  for i in range(0,len(R1_list))]
 	bam_lists = [bams[x:x+merge_max] for x in range(0, len(bams), merge_max)]
 	
 	# Write temporary files with merge lists
@@ -177,7 +187,7 @@ def merge_jobs_from_folder(merge_max, sub_file, folder, out_dag, sample_code):
 sa_code  = get_sample_name(dir)
 out = "bwa_stampy_" + get_sample_name(dir) + ".dag"
 
-#mapping_jobs_from_folder(sub, get_ref(dir, round), dir, out, sa_code)
+mapping_jobs_from_folder(sub, get_ref(dir, round), dir, out, sa_code)
 
-#merge_jobs_from_folder(30,  "merge.sub", dir, out, sa_code)
+merge_jobs_from_folder(30,  "merge.sub", dir, out, sa_code)
 
