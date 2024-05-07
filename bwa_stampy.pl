@@ -32,13 +32,21 @@ $shell="shell.sh";
 open S, ">$shell";
 print S '#!/bin/bash';
 print S "\n";
-print S "uname -r\n";
+
+# Print node OS information for debugging
+print S "echo Node is running\n";
+print S "uname -a\n";
+print S "cat /etc/os-release\n";
+
 print S "mkdir pipeline_run\n";
 print S "mv $ref_string.fasta.tgz ./pipeline_run\n";
+# Testing new samtools
+#print S "mv pipeline_software2.tgz pipeline_software.tgz\n";
 print S "mv pipeline_software.tgz ./pipeline_run\n";
 print S "mv *Block* ./pipeline_run\n";
 print S "cd ./pipeline_run\n";
-print S "tar -xzf $ref_string.fasta.tgz\n";
+print S "echo $ref_string.fasta.tgz\n";
+print S "tar -xzf $ref_string.fasta.tgz -O > $ref_string.fasta \n";
 print S "tar -xzf pipeline_software.tgz\n";
 print S "gzip -d $tarred_fastq[0]\n";
 print S "gzip -d $tarred_fastq[1]\n";
@@ -51,12 +59,21 @@ print S "bwa sampe -P $ref_string.fasta $read1[0].sai $read2[0].sai $read1[0].fa
 print S "export PATH=".'$(pwd)'."/samtools/bin:".'$PATH';
 print S "\n";
 print S "samtools view -bS $read_set[0]_$block_id.sam > $read_set[0]_$block_id.bam\n";
+print S "echo flagstat $read_set[0]_$block_id.bam\n";
+print S "samtools flagstat $read_set[0]_$block_id.bam\n";
 print S "export PATH=".'$(pwd)'."/python/bin:".'$PATH';
 print S "\n";
 print S "./stampy.py -G $ref_string $ref_string.fasta\n";
 print S "./stampy.py -g $ref_string -H $ref_string\n";
 print S "./stampy.py -g $ref_string -h $ref_string --bamkeepgoodreads -M $read_set[0]_$block_id.bam -o $read_set[0]_remapped.$block_id.sam\n";
-print S "samtools view -bS -q 20 $read_set[0]_remapped.$block_id.sam > $read_set[0]_remapped.$block_id.bam\n";
+# Want to keep track of mapping percentage (the -q20 flag filters out unmapped/low qual alignments)
+# Prev command: print S "samtools view -bS -q 20 $read_set[0]_remapped.$block_id.sam > $read_set[0]_remapped.$block_id.bam\n";
+print S "samtools view -bS $read_set[0]_remapped.$block_id.sam > $read_set[0]_remapped.$block_id.bam\n";
+print S "echo flagstat $read_set[0]_remapped.$block_id.bam\n";
+print S "samtools flagstat $read_set[0]_remapped.$block_id.bam\n";
+
+
+# Added sort step to speed up combining 
 print S "samtools sort $read_set[0]_remapped.$block_id.bam -o $read_set[0]_remapped.sort.$block_id.bam\n";
 print S "mv $read_set[0]_remapped.sort.$block_id.bam ../$read_set[0]_remapped.$block_id.bam \n";
 print S "cd ../\n";
