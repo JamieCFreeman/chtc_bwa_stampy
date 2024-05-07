@@ -1,0 +1,19 @@
+SUBMIT-DESCRIPTION SampleMerge {
+    executable              = /home/jcfreeman2/chtc_align/merge_job.sh
+    initialdir              = /home/jcfreeman2/chtc_align
+    transfer_executable     = true
+    transfer_input_files    = /home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz
+    when_to_transfer_output = ON_EXIT_OR_EVICT
+    arguments               = "$(file_list) $(strip)"
+    output                  = $(file_list).out
+    error                   = $(file_list).err
+    log                     = $(file_list).log
+    universe                = container
+    Requirements            = (Target.HasCHTCStaging == true)
+    container_image         = file:///staging/jcfreeman2/osgvo-el7.sif
+    request_cpus            = 1
+    request_memory          = 1296
+    request_disk            = 25000000
+    stream_output           = false
+}
+
