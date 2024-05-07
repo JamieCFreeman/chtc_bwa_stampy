@@ -1,7 +1,7 @@
 # Implementation of the Drosophila Genome Nexus style 2-step mapping.
 
  1. Directory structure must match expected for scripts to run. 
-	Pairs of fastq files (must be unzipped) should be located in their own folder (named unique sample ID).
+	Pairs of fastq files should be located in their own folder (named unique sample ID).
 	The shared folder contains the reference genome and zipped programs to send out for jobs.
 	Outputs will be transferred back to outputs on job completion.
 
@@ -16,14 +16,13 @@
 	----outputs<br/>
 </pre>
 
- Steps 2-4 are implemented in split_n_run.sh.<br/>
- 2. Run split.pl (on the submit machine) for each sample to split into blocks. 
+ 2. Run split.sh (on marula or on the submit machine) for each sample to split into blocks. 
     Takes n lines for each block and name of sample folders as input<br/>
-	Usage:  perl split.pl ${n_lines} ${FOLDER}
+	Usage:  split.sh ${FOLDER}
  
  3. Prepare the workflow file (dag).<br/>
-	Input is the submit file (sub), the name to write the dag to, and ref seq name (zipped)<br/>
-	Usage: perl prepare_dag.pl bwa_stampy.sub bwa_stampy_${NOW}.dag DmelRef.fasta.tgz
+	Input is the input folder<br/>
+	Usage: python write_bwa_stampy_dag.py ${FOLDER}
 
 	Output .dag file lists the different variables for each job that will be submitted. 
 <pre>
