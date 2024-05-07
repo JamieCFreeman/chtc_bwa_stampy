@@ -58,7 +58,8 @@ fi
   if [ ${bam_reads} -eq ${total_reads_input} ]; then
     echo "${FOLDER}.bam contains all reads input";
     echo "Deleting block bams for ${FOLDER}";
-    find ./outputs -name "*remapped.Block*" -name "*.bam" -name "$FOLDER*" -exec rm {} \;
+    #find ./outputs -name "*remapped.Block*" -name "*.bam" -name "$FOLDER*" -exec rm {} \;
+    find ./outputs -name "*remapped.Block*" -name "*.bam" -name "$FOLDER*" -exec tar -czf ./outputs/${FOLDER}_bams.tar.gz {} \;
     find -iname "${FOLDER}*" -iname "*_out*" -exec rm {} \;
     echo "tarring logs for ${FOLDER}";
     find ./outputs -name "*$FOLDER*" \( -name "*.err" -o -name "*.log"  -o -name "*.out" \) -exec \
