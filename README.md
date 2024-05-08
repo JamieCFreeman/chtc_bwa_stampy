@@ -21,7 +21,7 @@
 	Usage:  split.sh ${FOLDER}
  
  3. Prepare the workflow file (dag).<br/>
-	Input is the absolute path of the input folde (either whole input_fastq folder or an indiv subdirectory within)r<br/>
+	Input is the absolute path of the input folde (either whole input_fastq folder or an indiv subdirectory within)<br/>
 	Usage: python write_bwa_stampy_dag.py ${FOLDER}
 
 	Output .dag file lists the different variables for each job that will be submitted. 

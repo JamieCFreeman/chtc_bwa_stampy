@@ -200,7 +200,7 @@ if __name__ == "__main__":
 	
 	write_inline_submit(out, name="PrelimMerge", exc="/home/jcfreeman2/chtc_align/merge_job.sh", in_dir="/home/jcfreeman2/chtc_align", trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz", args="$(file_list) $(strip)", out_pattern="$(file_list)", cpu="1", ram="1296", disk="10000000" )
 	
-	write_inline_submit(out, name="SampleMerge", exc="/home/jcfreeman2/chtc_align/merge_job.sh", in_dir="/home/jcfreeman2/chtc_align", trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz", args="", out_pattern="$(file_list)", cpu="1", ram="1296", disk="25000000" )
+	write_inline_submit(out, name="SampleMerge", exc="/home/jcfreeman2/chtc_align/merge_job.sh", in_dir="/home/jcfreeman2/chtc_align", trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz", args="$(file_list) $(strip)", out_pattern="$(file_list)", cpu="1", ram="1296", disk="25000000" )
 	
 	# If the input directory contains multiple directories, take those as samples, otherwise take input as a singular sample
 	subdir_list = [ x for x in subdirs(fq_dir) ]
@@ -214,6 +214,6 @@ if __name__ == "__main__":
 	for i in sample_list:
 		# Then write jobs for each sample
 		sa_code  = get_sample_name(i)
-		mapping_jobs_from_folder("MapBlocks", get_ref(i, round), i, out, sa_code)
+		#mapping_jobs_from_folder("MapBlocks", get_ref(i, round), i, out, sa_code)
 		merge_jobs_from_folder(30,  "PrelimMerge", i, out, sa_code)
 
