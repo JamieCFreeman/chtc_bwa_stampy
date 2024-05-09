@@ -214,6 +214,6 @@ if __name__ == "__main__":
 	for i in sample_list:
 		# Then write jobs for each sample
 		sa_code  = get_sample_name(i)
-		#mapping_jobs_from_folder("MapBlocks", get_ref(i, round), i, out, sa_code)
+		mapping_jobs_from_folder("MapBlocks", get_ref(i, round), i, out, sa_code)
 		merge_jobs_from_folder(30,  "PrelimMerge", i, out, sa_code)
 
