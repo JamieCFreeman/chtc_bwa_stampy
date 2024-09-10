@@ -14,6 +14,13 @@
 # Input
 
 FOLDER=$1
+
+##################################################################################################
+echo "making folder ${FOLDER}, and moving .fq.gz files"
+mkdir -p ${FOLDER}
+find . -iname "${FOLDER}*" -type f
+find . -iname "${FOLDER}*" -type f -exec mv {} ./${FOLDER} \;
+
 #FILE=`find ${FOLDER} -type f -iname "*R1*" |  sed 's /.*/  ' `
 #FOLDER="/home/jcfreeman2/chtc_align/input_fastq/25Feb23-2-ZI418N"
 #FILE="25Feb23-1-ZI254N_S393_L002_R2_001.fastq.gz"
@@ -72,4 +79,6 @@ split_fq_gz &
 READ_SET="R2"
 split_fq_gz
 
-
+wait
+echo "done waiting for ${FOLDER}"
+find ./${FOLDER} -type f ! -iname "*Block*" -exec mv {} . \;
