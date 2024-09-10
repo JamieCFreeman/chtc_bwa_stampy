@@ -43,3 +43,7 @@ DAG="bwa_stampy_2023_12_21_06:56.dag"
 # Submit dag file to queue
 #condor_submit_dag bwa_stampy_${NOW}.dag -maxpost 2
 
+# Command for syncing back
+# rsync -av --remove-source-files jcfreeman2@transfer.chtc.wisc.edu:/staging/jcfreeman2/"240322-*.bam" .
+
+
