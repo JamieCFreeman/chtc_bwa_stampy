@@ -188,7 +188,7 @@ def subdirs(path):
 if __name__ == "__main__":
 
 	fq_dir = sys.argv[1]
-	round = 1
+	round = 2
 
 	# Title the out dag with current time
 	d   = datetime.datetime.now()
