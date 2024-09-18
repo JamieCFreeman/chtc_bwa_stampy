@@ -61,7 +61,7 @@ def get_ref(folder, round):
     elif round == 2:
         return( get_sample_name(folder) + "_ref.fasta.tgz" )
 
-def write_inline_submit(sub_file, name, exc, in_dir, trans_in, args, out_pattern, cpu, ram, disk, trans_exc="true", uni="container", cont_im="file:///staging/jcfreeman2/osgvo-el7.sif"):
+def write_inline_submit(sub_file, name, exc, in_dir, trans_in, args, out_pattern, cpu, ram, disk, trans_exc="true", uni="container", run_outside=False, cont_im="file:///staging/jcfreeman2/osgvo-el7.sif"):
 	'''
 	Write inline submit description for dag
     '''
@@ -78,7 +78,11 @@ def write_inline_submit(sub_file, name, exc, in_dir, trans_in, args, out_pattern
 		f.write( '\t' + f"{'error' :<25} = {out_pattern}.err" +'\n')
 		f.write( '\t' + f"{'log' :<25} = {out_pattern}.log" +'\n')
 		f.write( '\t' + f"{'universe' :<25} = {uni}" +'\n')
-		f.write( '\t' + f"{'Requirements' :<25} = (Target.HasCHTCStaging == true)" +'\n')
+		if( run_outside == True):
+			f.write( '\t' + f"{'+WantFlocking' :<25} = true" + '\n')
+			f.write( '\t' + f"{'+WantGlideIn' :<25} = true" + '\n')
+		elif( run_outside == False):
+			f.write( '\t' + f"{'Requirements' :<25} = (Target.HasCHTCStaging == true)" +'\n')
 		f.write( '\t' + f"{'container_image' :<25} = {cont_im}" +'\n')
 		f.write( '\t' + f"{'request_cpus' :<25} = {cpu}" +'\n')
 		f.write( '\t' + f"{'request_memory' :<25} = {ram}" +'\n')
@@ -188,7 +192,7 @@ def subdirs(path):
 if __name__ == "__main__":
 
 	fq_dir = sys.argv[1]
-	round = 2
+	round = 1
 
 	# Title the out dag with current time
 	d   = datetime.datetime.now()
@@ -196,11 +200,18 @@ if __name__ == "__main__":
 	out = "bwa_stampy_" + now + ".dag"
 	
 	# First write submit descriptions
-	write_inline_submit(out, name="MapBlocks", exc="/home/jcfreeman2/chtc_align/bwa_stampy.pl", in_dir="/home/jcfreeman2/chtc_align/outputs", trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz,/home/jcfreeman2/chtc_align/input_fastq/shared/$(ref),/home/jcfreeman2/chtc_align/input_fastq/$(fastq1),/home/jcfreeman2/chtc_align/input_fastq/$(fastq2)", args="", out_pattern="bwa_stampy_$(block_id)", cpu="1", ram="1000", disk="8000000")
+	# For mapping can send outside CHTC
+	write_inline_submit(out, name="MapBlocks", exc="/home/jcfreeman2/chtc_align/bwa_stampy.pl", in_dir="/home/jcfreeman2/chtc_align/outputs", \
+		trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz,/home/jcfreeman2/chtc_align/input_fastq/shared/$(ref),/home/jcfreeman2/chtc_align/input_fastq/$(fastq1),/home/jcfreeman2/chtc_align/input_fastq/$(fastq2)", \
+		args="", out_pattern="bwa_stampy_$(block_id)", cpu="1", ram="1024", disk="8000000", run_outside=True, \
+		cont_im= "osdf:///chtc/staging/jcfreeman2/osgvo-el7.sif")
 	
-	write_inline_submit(out, name="PrelimMerge", exc="/home/jcfreeman2/chtc_align/merge_job.sh", in_dir="/home/jcfreeman2/chtc_align", trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz", args="$(file_list) $(strip)", out_pattern="$(file_list)", cpu="1", ram="1296", disk="10000000" )
+# For merging need to use staging
+	write_inline_submit(out, name="PrelimMerge", exc="/home/jcfreeman2/chtc_align/merge_job.sh", in_dir="/home/jcfreeman2/chtc_align", \
+		trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz", args="$(file_list) $(strip)", out_pattern="$(file_list)", cpu="1", ram="1296", disk="10000000" )
 	
-	write_inline_submit(out, name="SampleMerge", exc="/home/jcfreeman2/chtc_align/merge_job.sh", in_dir="/home/jcfreeman2/chtc_align", trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz", args="$(file_list) $(strip)", out_pattern="$(file_list)", cpu="1", ram="1296", disk="25000000" )
+	write_inline_submit(out, name="SampleMerge", exc="/home/jcfreeman2/chtc_align/merge_job.sh", in_dir="/home/jcfreeman2/chtc_align", \
+		trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz", args="$(file_list) $(strip)", out_pattern="$(file_list)", cpu="1", ram="1296", disk="25000000" )
 	
 	# If the input directory contains multiple directories, take those as samples, otherwise take input as a singular sample
 	subdir_list = [ x for x in subdirs(fq_dir) ]
