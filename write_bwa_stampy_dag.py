@@ -59,7 +59,7 @@ def get_ref(folder, round):
     if round == 1:
         return("DmelRef.fasta.tgz")
     elif round == 2:
-        return( get_sample_name(folder) + "_ref.fasta.tgz" )
+        return( get_sample_name(folder).split('_S')[0] + "_ref.fasta.tgz" )
 
 def write_inline_submit(sub_file, name, exc, in_dir, trans_in, args, out_pattern, cpu, ram, disk, trans_exc="true", uni="container", run_outside=False, cont_im="file:///staging/jcfreeman2/osgvo-el7.sif"):
 	'''
@@ -71,7 +71,7 @@ def write_inline_submit(sub_file, name, exc, in_dir, trans_in, args, out_pattern
 		f.write( '\t' + f"{'initialdir' :<25} = {in_dir}" + '\n')
 		f.write( '\t' + f"{'transfer_executable' :<25} = {trans_exc}" +'\n')
 		f.write( '\t' + f"{'transfer_input_files' :<25} = {trans_in}" +'\n')
-		f.write( '\t' + f"{'when_to_transfer_output' :<25} = ON_EXIT_OR_EVICT" +'\n')
+		f.write( '\t' + f"{'when_to_transfer_output' :<25} = ON_EXIT" +'\n')
 		if( len(args) > 0):
 			f.write( '\t' + f"{'arguments' :<25} = {args}" + '\n')
 		f.write( '\t' + f"{'output' :<25} = {out_pattern}.out" +'\n')
@@ -192,7 +192,7 @@ def subdirs(path):
 if __name__ == "__main__":
 
 	fq_dir = sys.argv[1]
-	round = 1
+	round  = 2
 
 	# Title the out dag with current time
 	d   = datetime.datetime.now()
@@ -201,10 +201,13 @@ if __name__ == "__main__":
 	
 	# First write submit descriptions
 	# For mapping can send outside CHTC
-	write_inline_submit(out, name="MapBlocks", exc="/home/jcfreeman2/chtc_align/bwa_stampy.pl", in_dir="/home/jcfreeman2/chtc_align/outputs", \
+	write_inline_submit(out, name="MapBlocks", exc="/home/jcfreeman2/chtc_align/bwa_stampy.pl",  
+        in_dir="/home/jcfreeman2/chtc_align/outputs", \
 		trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz,/home/jcfreeman2/chtc_align/input_fastq/shared/$(ref),/home/jcfreeman2/chtc_align/input_fastq/$(fastq1),/home/jcfreeman2/chtc_align/input_fastq/$(fastq2)", \
-		args="", out_pattern="bwa_stampy_$(block_id)", cpu="1", ram="1024", disk="8000000", run_outside=True, \
-		cont_im= "osdf:///chtc/staging/jcfreeman2/osgvo-el7.sif")
+		args="", out_pattern="bwa_stampy_$(block_id)", cpu="1", ram="2048", disk="8000000",  
+        #run_outside=True, \
+		#cont_im= "osdf:///chtc/staging/jcfreeman2/osgvo-el7.sif" \
+        )
 	
 # For merging need to use staging
 	write_inline_submit(out, name="PrelimMerge", exc="/home/jcfreeman2/chtc_align/merge_job.sh", in_dir="/home/jcfreeman2/chtc_align", \
