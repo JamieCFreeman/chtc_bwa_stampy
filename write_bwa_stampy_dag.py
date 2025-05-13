@@ -165,7 +165,7 @@ def merge_jobs_from_folder(merge_max, sub_file, folder, out_dag, sample_code):
 		with open(out_dag, 'a') as f:
 			job_now =  sa_code + "_merge" + str(i)
 			f.write( "JOB " + job_now + " " + sub_file + '\n' )
-			f.write( "SCRIPT PRE " + job_now + " gather_merge.sh " + temp_merge + '\n' )
+			f.write( "SCRIPT DEBUG " + out_dag + "_PRE_debug.log ALL " + "PRE " + job_now + " gather_merge.sh " + temp_merge + '\n' )
 			f.write( "SCRIPT POST " + job_now + " merge_POST.sh " + temp_merge + '\n' )
 			f.write( "VARS " + job_now + " file_list=" + '"' + temp_merge + '"' + '\n' )
 			f.write( "VARS " + job_now + " strip=" + '"' + "1" + '"' + '\n' )
@@ -174,7 +174,7 @@ def merge_jobs_from_folder(merge_max, sub_file, folder, out_dag, sample_code):
 	with open(out_dag, 'a') as f:
 		f.write( "JOB " + sa_code + " SampleMerge" + '\n')
 		f.write( "SCRIPT PRE " + sa_code + " merge2_PRE.sh " + sa_code + '\n')
-		f.write( "SCRIPT POST " + sa_code + " merge2_POST.sh " + sa_code + '\n' )
+		f.write( "SCRIPT DEBUG " + out_dag + "_POST_debug.log ALL " +  "POST " + sa_code + " merge2_POST.sh " + sa_code + '\n' )
 		f.write( "VARS " + sa_code + " file_list=" + '"' + sa_code + '"' + '\n' )
 		f.write( "VARS " + sa_code + " strip=" + '"' + "2" + '"' + '\n' )
 		job_list = [sa_code + "_merge" + str(i) for i in range(len(bam_lists))]
@@ -192,7 +192,7 @@ def subdirs(path):
 if __name__ == "__main__":
 
 	fq_dir = sys.argv[1]
-	round  = 2
+	round  = 1
 
 	# Title the out dag with current time
 	d   = datetime.datetime.now()
@@ -205,7 +205,8 @@ if __name__ == "__main__":
         in_dir="/home/jcfreeman2/chtc_align/outputs", \
 		trans_in="/home/jcfreeman2/chtc_align/input_fastq/shared/pipeline_software.tgz,/home/jcfreeman2/chtc_align/input_fastq/shared/$(ref),/home/jcfreeman2/chtc_align/input_fastq/$(fastq1),/home/jcfreeman2/chtc_align/input_fastq/$(fastq2)", \
 		args="", out_pattern="bwa_stampy_$(block_id)", cpu="1", ram="2048", disk="8000000",  
-        #run_outside=True, \
+        run_outside=False, \
+		cont_im= "file:///staging/jcfreeman2/osgvo-el7.sif" \
 		#cont_im= "osdf:///chtc/staging/jcfreeman2/osgvo-el7.sif" \
         )
 	
