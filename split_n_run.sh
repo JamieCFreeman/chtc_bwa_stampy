@@ -1,29 +1,16 @@
 #!/bin/bash
 
 
-
-# For the directories in input_fastq (excluding itself & the shared folder), 
-# 	unzip fastq.gz files first!! (should edit function to check & exit if not),
-#	run split script
-
-# For fastq files in input_fastq, create directories for each sample, and move the appropriate files into them
-#while read FOLDER; do
-#  echo "${FOLDER}"; mkdir ${FOLDER}; mv "${FOLDER}"*.gz ${FOLDER}
-#done < <( find ./input_fastq -iname "*.fastq*" -maxdepth 1 -mindepth 1 -type f | sed 's/_S[0-9][0-9][0-9]_L00[0-9]_.*//' | sort -V | uniq )
-
-
-
-
-
-#while read FOLDER; do
-#  echo "${FOLDER}"; gunzip ${FOLDER}/* ; perl split.pl 500000 ${FOLDER}
-#done < <(find ./input_fastq -maxdepth 1 -mindepth 1 -type d | sed '/shared/d')
-
-
+# Either split fq files into blocks here or transfer tar.gz of split sample fqs
 
 # Untar files
-find ./input_fastq -maxdepth 1 -iname "*.tar.gz" | xargs -I % tar -xf % -C ./input_fastq
+#find ./input_fastq -maxdepth 1 -iname "*.tar.gz" | xargs -I % tar -xf % -C ./input_fastq
 # find ./input_fastq -maxdepth 1 -iname "*.tar.gz" -exec rm {} \;
+
+# Or if need to split here (runs only 1 at at time):
+cd input_fastq
+find . -maxdepth 1 -type f -iname "*_R1_*" | sed 's/_L.*//' | sed 's ./  ' | xargs -I % ../split.sh %
+
 
 
 # Append dag file name with date & time, so each has unique ID
@@ -46,4 +33,5 @@ DAG="bwa_stampy_2023_12_21_06:56.dag"
 # Command for syncing back
 # rsync -av --remove-source-files jcfreeman2@transfer.chtc.wisc.edu:/staging/jcfreeman2/"240322-*.bam" .
 
+#periodic_release = (HoldReasonSubCode == 2)
 
